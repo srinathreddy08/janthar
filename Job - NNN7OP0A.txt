@@ -1,0 +1,17 @@
+//NNN7OP0A JOB ,SCHENV='CA7PROD',NOTIFY=&SYSUID,CLASS=7,              
+//            MSGCLASS=D,REGION=32M,PRTY=10                           
+//*                                                                   
+/*JOBPARM P=PROCE0                                                    
+//*                                                                   
+//** OVERRIDE REQUESTED BY ??????                                     
+//JOBLIB DD DSN=E.EXECLIB,DISP=SHR                                    
+//       DD DSN=E.ECVP.EXECLIB,DISP=SHR                               
+//       DD DSN=E.EXPN.EXECLIB,DISP=SHR                               
+//******************************************************************* 
+//* JCL FOR CALLING PROC EDGNAS50 TO EXECUTE PROGRAM EDBNAECE       * 
+//* TO GENERATE DETAIL STATS AND TO CREATE REAPPLY FILE.            * 
+//******************************************************************* 
+//NNN7    EXEC EDGNAS50,                                              
+//            LOGGING=0001,                                           
+//            FLAG='U'                                                
+//*                                                                   

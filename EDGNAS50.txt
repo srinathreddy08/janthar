@@ -1,0 +1,145 @@
+//* RUN THROUGH JCLPREP ON 24/09/2018 AT 10:10:16 BY CHGMAN
+//**---------------------------------------------------------------*
+//**  PROCEDURE         : EDGNAS50                                 *
+//**  DATE LAST UPDATED : 26/06/2014                               *
+//**  PURPOSE           : PROC. TO CALL EDBNAECE TO GENERATE       *
+//**                    : DETAILED STATISTICS FILE AND REAPPLY FILE*
+//**  CREATED BY        : INFOSYS                                  *
+//**---------------------------------------------------------------*
+//** INPUT FILES : E.EXGB.NASEVG.AUDIT.PROC.FILE(0)                *
+//**               E.EXGB.NASEVG.DIN.FILE(0)                       *
+//**                                                               *
+//** OUTPUT FILES: E.EXGB.NASEVG.STATS.OUTPUT(0)                   *
+//**               E.EXGB.NASEVG.DISP.STATS(+1)                    *
+//**               E.EXGB.NASEVG.REAPPLY.FILE(+1)                  *
+//**                                                               *
+//**  CALLED BY JCL     :  NNN7OP0A                                *
+//**---------------------------------------------------------------*
+//**               M O D I F I C A T I O N     L O G               *
+//**---------------------------------------------------------------*
+//**  MODIFIED BY       :                                          *
+//**  DATE              : DD/MM/YYYY                               *
+//**  MOD NUMBER        : (----) ----                              *
+//**  COMMENT           :                                          *
+//**---------------------------------------------------------------*
+//**  MODIFIED BY       : DAVID LATHBURY                           *
+//**  DATE              : 24/09/2018                               *
+//**  MOD NUMBER        : R5621
+//**  COMMENT           : STATS FILE LRECL CHANGED FROM 278 TO 287 *
+//**---------------------------------------------------------------*
+//EDGNAS50 PROC HLQ='E',
+//            EXPN='EXGB',
+//            SOD=D,
+//            SO8='(8,,SARD),DEST=SAR',
+//            JOBID='NNN7OP0A',
+//            PARMLIB='E.PARMLIB',
+//            LOGGING=0001,
+//            FLAG='U'
+//*--------------------------------------------------------------------*
+//* THIS STEP DEDUPLICATES THE DINS TO BE REAPPLIED
+//*--------------------------------------------------------------------*
+//*
+//STEP010  EXEC PGM=SORT,
+//            COND=(0,NE)
+//SYSOUT   DD SYSOUT=&SOD
+//SORTIN   DD DSN=&HLQ..&EXPN..NASEVG.DIN.FILE(0),DISP=SHR
+//SORTOUT  DD DSN=&HLQ..&EXPN..NASEVG.DIN.FILE.SORT(+1),
+//            DISP=(NEW,CATLG,CATLG),UNIT=3390,
+//            SPACE=(CYL,(6000,500),RLSE),
+//            DCB=(DSCB,RECFM=FB,LRECL=12,BLKSIZE=27996)
+//SYSIN    DD DSN=&PARMLIB(EDCNASE1),DISP=SHR
+//*
+//**********************************************************************
+//*CALL PROGRAM EDBNAECE TO GENERATE DETAILED STATS FILE
+//* AND TO CREATE REAPPLY FILE.
+//**********************************************************************
+//*
+//STEP020  EXEC PGM=EDBNAECE,
+//            COND=(0,NE),
+//            PARM='&LOGGING.&FLAG.'
+//*
+//AUDITI   DD DSN=&HLQ..&EXPN..NASEVG.AUDIT.PROC.FILE(0),DISP=SHR
+//*
+//DININP   DD DSN=&HLQ..&EXPN..NASEVG.DIN.FILE.SORT(+1),DISP=SHR
+//*
+//REAPPLY  DD DSN=&HLQ..&EXPN..NASEVG.REAPPLY.FILE(+1),
+//            DISP=(NEW,CATLG,CATLG),UNIT=3390,
+//            SPACE=(CYL,(6000,500),RLSE),
+//            DCB=(DSCB,RECFM=VB,LRECL=207,BLKSIZE=27998)
+//*
+//STATSO   DD DSN=&HLQ..&EXPN..NASEVG.STATS.OUTPUT(0),DISP=SHR
+//*
+//STATSD   DD DSN=&HLQ..&EXPN..NASEVG.DISP.STATS(+1),
+//            DISP=(NEW,CATLG,DELETE),UNIT=3390,
+//            SPACE=(CYL,(15,15),RLSE),
+//            DCB=(DSCB,RECFM=FB,LRECL=57,BLKSIZE=27987)
+//*
+//* SYSTEM MESSAGES / DUMP DATA
+//*
+//ABENDAID DD SYSOUT=&SO8
+//SYSOUT   DD SYSOUT=&SOD
+//SYSPRINT DD SYSOUT=&SOD
+//SYSTSPRT DD SYSOUT=&SOD
+//SYSUDUMP DD SYSOUT=&SO8
+//*
+//*--------------------------------------------------------------------*
+//* THIS STEP COPIES THE STATISTICS FILE TO THE SAR
+//*--------------------------------------------------------------------*
+//*
+//STEP030  EXEC PGM=IEBGENER,
+//            COND=(0,NE)
+//SYSIN    DD DUMMY
+//SYSUT1   DD DSN=&HLQ..&EXPN..NASEVG.DISP.STATS(+1),DISP=SHR
+//SYSUT2   DD SYSOUT=&SOD
+//SYSPRINT DD SYSOUT=&SOD
+//SYSUDUMP DD SYSOUT=&SO8
+//**********************************************************************
+//* THIS STEP CREATES A SEPARATE FILE THAT CONTAINS ALL THE RECORDS THAT
+//* GOT ERRORED OUT DURING THE PAF EVERGREENING PROCESS.
+//**********************************************************************
+//SETP040  EXEC PGM=SORT,
+//            COND=(0,NE)
+//SYSPRINT DD SYSOUT=&SOD
+//SYSOUT   DD SYSOUT=&SOD
+//SYSUDUMP DD SYSOUT=&SO8
+//SORTIN   DD DSN=THC.&HLQ..&EXPN..NASEVG.AUDIT.ERROR(0),DISP=SHR
+//         DD DSN=&HLQ..&EXPN..NASEVG.AUDIT.PROC.FILE(0),DISP=SHR
+//SORTOUT  DD DSN=THC.&HLQ..&EXPN..NASEVG.AUDIT.ERROR(+1),
+//            DISP=(NEW,CATLG,DELETE),UNIT=(CART,,DEFER),
+//            LABEL=EXPDT=99000,
+//            DCB=(DSCB,RECFM=VB,LRECL=30731,BLKSIZE=32760)
+//SYSIN    DD DSN=&PARMLIB(EDCNAEI2),DISP=SHR
+//**********************************************************************
+//* THIS STEP WRAPS THE AUDIT FILE TO A NEW GDG FILE
+//**********************************************************************
+//STEP050  EXEC PGM=IEBGENER,
+//            COND=(0,NE)
+//SYSPRINT DD SYSOUT=&SOD
+//SYSUT1   DD DSN=&HLQ..&EXPN..NASEVG.AUDIT.PROC.FILE(0),DISP=SHR
+//SYSUT2   DD DSN=&HLQ..&EXPN..NASEVG.AUDIT.PROC.BACKLOG(+1),
+//            DISP=(NEW,CATLG,DELETE),UNIT=3390,
+//            SPACE=(CYL,(6000,500),RLSE),
+//            DCB=(DSCB,RECFM=VB,LRECL=30731,BLKSIZE=32760)
+//SYSIN    DD DUMMY
+//**********************************************************************
+//* THIS STEP WRAPS THE STATS FILE TO A NEW GDG TAPE FILE
+//**********************************************************************
+//STEP060  EXEC PGM=IEBGENER,
+//            COND=(0,NE)
+//SYSPRINT DD SYSOUT=&SOD
+//SYSUT1   DD DSN=THC.&HLQ..&EXPN..NASEVG.STATS.OUTPUT(0),DISP=SHR
+//         DD DSN=&HLQ..&EXPN..NASEVG.STATS.OUTPUT(0),DISP=SHR
+//SYSUT2   DD DSN=THC.&HLQ..&EXPN..NASEVG.STATS.OUTPUT(+1),
+//            DISP=(NEW,CATLG,DELETE),UNIT=(CART,,DEFER),
+//            LABEL=EXPDT=99000,
+//            DCB=(DSCB,RECFM=FB,LRECL=287,BLKSIZE=32718)
+//SYSIN    DD DUMMY
+//*-------------------------------------------------------------------*
+//* WIN\LOSE JOB COMPLETION STEPS                                     *
+//*-------------------------------------------------------------------*
+//*
+//WIN      EXEC PGM=CHATTER,
+//            COND=(4,LT),
+//            PARM='&JOBID. COMPLETED SUCCESSFULLY'
+//LOSE     EXEC PGM=PM62,
+//            COND=(0,EQ,WIN)

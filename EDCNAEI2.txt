@@ -1,0 +1,2 @@
+  SORT FIELDS=COPY                                                      00010043
+  INCLUDE COND=(1513,1,CH,EQ,C'E')                                      00020045
