@@ -1,0 +1,884 @@
+CBL ARITH(EXTEND)                                                       00000100
+          IDENTIFICATION DIVISION.                                      00000200
+                                                                        00000300
+          PROGRAM-ID.   EDBNAECE.                                       00000400
+                                                                        00000500
+          AUTHOR.       ANUSHREE JAIN.                                  00000600
+      *                                                                 00000700
+          DATE-WRITTEN.  AUGUST 2014.                                   00000800
+      *                                                                 00000900
+          DATE-COMPILED. AUGUST 2014.                                   00001000
+      *                                                                 00001100
+      ***************************************************************** 00001200
+      * SYSTEM      : NAS EVERGREENING                                  00001300
+      * FUNCTION    : THIS PROGRAM GENERATES DISPLAY STATISTICS FILE    00001400
+      *             : AND ALSO WRITES REAPPLY FILE.                     00001500
+      * SUMMARY     : 1. THE INPUT AUDIT FILE CONTAINS DIN COUNT,       00001600
+      *             :    LIN COUNT AND PIN COUNT.                       00001700
+      *             : 2. THIS PROGRAM ADDS ALL DIN COUNTS, PIN COUNT    00001800
+      *             :    AND LIN COUNT.                                 00001900
+      *             : 3. THESE COUNTS ARE POPULATED IN STATS FILE.      00002000
+      *             : 4. PROGRAM UPDATES STATISTICS FILE AND ALSO       00002100
+      *             :    GENERATES DISPLAY STATISTICS FILE.             00002200
+      *             : 5. PROGRAM WRITES REAPPLY FILE IN CASE OF UPDATE  00002300
+      *             :    MODE ONLY.                                     00002400
+      * CALLED BY   : JOB(NENAS050)                                     00002500
+      * CALLING     : ET530    : LOGGING MODULE                         00002600
+      *             : E1902    : CPU AND ELAPSED TIME CALCULATION MODULE00002610
+      *----------------------------------------------------------------*00002620
+      *                        C O P Y B O O K S                        00002630
+      *----------------------------------------------------------------*00002640
+      *  FILE SECTION                                                   00002650
+      *     EDFNAECB       : AUDIT FILE INTERFACE                       00002660
+      *     EXPFDREQ       : REAPPLY FILE INTERFACE                     00002661
+      *  WORKING STORAGE                                                00002670
+      *     E1902TCC       : CPU TIME CALCULATE MODULE INTERFACE        00002690
+      *     ET530LS        : LOGGING MODULE INTERFACE                   00002691
+      *     EDFNAECC       : STATISTICS FILE INTERFACE                  00002692
+      *  WORKING STORAGE (DB2 DCLGEN'S)                                 00002693
+      *     --------       : ---------------                            00002694
+      *  LINKAGE STORAGE                                                00002695
+      *     --------       : ---------------                            00002696
+      ******************************************************************00002700
+      * FILES       : DDNAME   :          FILE DESCRIPTION              00002800
+      *----------------------------------------------------------------*00002900
+      * I/P   1     : AUDITI   :  AUDIT INPUT FILE  : NAS EVERGREENING  00003000
+      *----------------------------------------------------------------*00003100
+      * I/P   3     : DININP   :  DIN   INPUT  FILE : NAS EVERGREENING  00003120
+      *----------------------------------------------------------------*00003130
+      * O/P   2     : REAPPLY  :  REAPPLY OUTPUT FILE                   00003200
+      *----------------------------------------------------------------*00003300
+      * O/P   3     : STATSD   :  DETAILED STATISTICS FILE              00003400
+      *----------------------------------------------------------------*00003500
+      * I/O   4     : STATSO   :  OUTPUT FILE CONTAINING STATISTICS     00003600
+      *----------------------------------------------------------------*00003700
+      ******************************************************************00003800
+      * DB2 TABLES USED                  !     NONE                    *00003900
+      *----------------------------------------------------------------*00004000
+      * TABLE NAME                       !     NONE                    *00004100
+      *----------------------------------!-----------------------------*00004200
+      ******************************************************************00004300
+      *                      MODIFICATION LOG                          *00004400
+      ******************************************************************00004500
+      *                                                                *00004600
+      *  MODIFIED BY       : ......................                    *00004700
+      *  DT                : --/--/----                                *00004800
+      *  MOD NUMBER        : (----) ----                               *00004900
+      *  COMMENT           : ......................                    *00005000
+      *                                                                *00005100
+      *                                                                *00005200
+      ***************************************************************** 00005201
+      *  MODIFIED BY       : ROHIT KAPOOR                              *00005202
+      *  DATE              : 16/01/2019                                *00005203
+      *  MOD NUMBER        : NASEVG                                    *00005204
+      *  COMMENT           : CORRECTED THE LOGGING LOGIC FOR LOGGING=1 *00005205
+      ***************************************************************** 00005210
+      *  MODIFIED BY : KRITIKA BABBAR (INFOSYS)                         00005220
+      *  DATE        : 24/11/2014                                       00005221
+      *  MOD NUMBER  : NAS001                                           00005230
+      *  COMMENTS    : DEFECT NUMBER : 21413                            00005250
+      *              : FIXES DONE IN ORDER TO CORRECT THE CREATION OF   00005251
+      *              : THE REAPPLY FILE.                                00005260
+      ***************************************************************** 00005270
+      *----------------------------------------------------------------*00005280
+      *  MODIFIED BY       : SALIHA HASSAN                              00005290
+      *  DATE              : 03/08/2018                                 00005291
+      *  MOD NUMBER        : PR10575-R5621- M&P ENHANCEMENTS - SPRNT#6  00005292
+      *  COMMENT           : DISPLAY STATEMENTS MODIFIED FOR BETTER     00005293
+      *                      UNDERSTANDING.DISPLAY TO CAPTURE NO OF     00005294
+      *                      TEXT TO HIGH QUALITY CHANGE ADDED          00005295
+      *----------------------------------------------------------------*00005296
+      ******************************************************************00005300
+      *               ENVIRONMENT DIVISION                             *00005400
+      ******************************************************************00005500
+      *                                                                 00005600
+       ENVIRONMENT DIVISION.                                            00005700
+       CONFIGURATION SECTION.                                           00005800
+                                                                        00005900
+       INPUT-OUTPUT SECTION.                                            00006000
+                                                                        00006100
+       FILE-CONTROL.                                                    00006200
+                                                                        00006300
+      * INPUT FILE                                                      00006310
+                                                                        00006320
+           SELECT AUDIT                                                 00006400
+                      ASSIGN            TO AUDITI.                      00006500
+                                                                        00006510
+           SELECT DIN-INP                                               00006530
+                      ASSIGN            TO DININP.                      00006540
+                                                                        00006550
+      * INPUT-OUTPUT FILE                                               00006600
+                                                                        00006610
+           SELECT STATS                                                 00006700
+                      ASSIGN            TO STATSO.                      00006800
+      * OUTPUT FILES                                                    00006900
+                                                                        00006910
+           SELECT STATD                                                 00007000
+                      ASSIGN            TO STATSD.                      00007100
+      *                                                                 00007230
+           SELECT REAPPLY                                               00007300
+                      ASSIGN            TO REAPPLY.                     00007400
+                                                                        00007500
+      *                                                                 00007600
+      *----------------------------------------------------------------*00007700
+       DATA DIVISION.                                                   00007800
+      *----------------------------------------------------------------*00007900
+       FILE SECTION.                                                    00008000
+      *----------------------------------------------------------------*00008100
+      *                                                                 00008200
+       FD AUDIT                                                         00008300
+           BLOCK CONTAINS 0 RECORDS                                     00008400
+           RECORDING MODE IS V                                          00008500
+           LABEL RECORDS ARE STANDARD.                                  00008600
+                                                                        00008700
+       01  AUDIT-REC.                                                   00008800
+           COPY EDFNAECB REPLACING ==:PFX:== BY ==AUD==.                00008900
+      *                                                                 00008910
+       FD DIN-INP                                                       00008920
+           BLOCK CONTAINS 0 RECORDS                                     00008930
+           RECORDING MODE IS F                                          00008940
+           LABEL RECORDS ARE STANDARD.                                  00008950
+                                                                        00008960
+       01  DIN-INP-REC.                                                 00008970
+           05  D-INP-DIN                    PIC S9(18) COMP.            00008980
+           05  D-INP-SUBJ-NB                PIC S9(04) COMP.            00008990
+           05  D-INP-SUBJ-SEQ-NB            PIC S9(04) COMP.            00008991
+      *                                                                 00009000
+       FD STATS                                                         00009100
+           BLOCK CONTAINS 0 RECORDS                                     00009200
+           RECORDING MODE IS F                                          00009300
+           LABEL RECORDS ARE STANDARD.                                  00009400
+                                                                        00009500
+R5621 *01  FD-STATS-REC                PIC X(278).                      00009600
+R5621  01  FD-STATS-REC                PIC X(287).                      00009610
+      *                                                                 00009700
+       FD STATD                                                         00009800
+           BLOCK CONTAINS 0 RECORDS                                     00009900
+           RECORDING MODE IS F                                          00010000
+           LABEL RECORDS ARE STANDARD.                                  00010100
+                                                                        00010200
+       01  STATS-DETAIL.                                                00010300
+           05 STAD-HEADER              PIC X(40).                       00010400
+           05 STAD-DETAILS             PIC Z(10)9(7).                   00010500
+      *                                                                 00010692
+       FD REAPPLY                                                       00010700
+           BLOCK CONTAINS 0 RECORDS                                     00010800
+           RECORDING MODE IS V                                          00010900
+           LABEL RECORDS ARE OMITTED.                                   00011000
+      *                                                                 00011100
+       01 REAPPLY-REC.                                                  00011200
+           COPY EXPFDREQ REPLACING ==:PFX:== BY ==REPL==.               00011300
+      *                                                                 00011500
+      ******************************************************************00011600
+      *               WORKING STORAGE SECTION                          *00011700
+      ******************************************************************00011800
+       WORKING-STORAGE SECTION.                                         00011900
+                                                                        00012000
+       01 FILLER                       PIC X(52) VALUE                  00012100
+              'PROGRAM EDBNAECE - START OF WORKING STORAGE SECTION'.    00012200
+      *                                                                 00012201
+      * ACCUMULATORS FOR STATS FILE                                     00012210
+       01 WA-ACCUMULATORS.                                              00012220
+          05 WA-DIN-COUNT              PIC S9(8) COMP VALUE ZEROS.      00012230
+          05 WA-PIN-COUNT              PIC S9(8) COMP VALUE ZEROS.      00012240
+          05 WA-LIN-COUNT              PIC S9(8) COMP VALUE ZEROS.      00012250
+          05 WA-ERRORED-REC            PIC S9(8) COMP VALUE ZEROS.      00012260
+      *                                                                 00012270
+      * CONSTANTS                                                       00012300
+       01 WC-CONSTANTS.                                                 00012400
+          05 WC-PROG-NAME              PIC X(08) VALUE 'EDBNAECE'.      00012500
+          05 WC-ET530                  PIC X(05) VALUE 'ET530'.         00012600
+          05 WC-E1902                  PIC X(05) VALUE 'E1902'.         00012700
+          05 WC-ONE                    PIC 9(01) VALUE 1.               00012710
+          05 WC-SPACES                 PIC X(01) VALUE SPACES.          00012720
+          05 WC-STATS-DET-HEADER.                                       00012800
+             10 WC-HEADER1             PIC X(40) VALUE                  00012900
+R5621                          'NUMBER OF LOW QUALITY INPUT RECORDS  :'.00013010
+             10 WC-HEADER2             PIC X(40) VALUE                  00013100
+R5621                          'NUMBER OF TEXT QUALITY INPUT RECORDS :'.00013210
+             10 WC-HEADER3             PIC X(40) VALUE                  00013300
+R5621                          'NUMBER OF ERRORED RECORDS            :'.00013410
+             10 WC-HEADER4             PIC X(40) VALUE                  00013500
+R5621                          'TOTAL NUMBER OF INPUT RECORDS        :'.00013610
+             10 WC-HEADER5             PIC X(40) VALUE                  00013700
+R5621                          'NO OF RECORDS WITH AIN AND QLTY UNCHG:'.00013810
+             10 WC-HEADER6             PIC X(40) VALUE                  00013900
+R5621                          'NO OF TEXT TO LQ RECORD WITH SAME AIN:'.00014010
+             10 WC-HEADER7             PIC X(40) VALUE                  00014100
+R5621                          'NO OF LQ TO HQ RECORDS WITH UNCHG AIN:'.00014210
+             10 WC-HEADER8             PIC X(40) VALUE                  00014300
+R5621                          'NO OF RECORDS WITH CHNG AIN SAME QLTY:'.00014410
+             10 WC-HEADER9             PIC X(40) VALUE                  00014500
+R5621                          'NO OF TEXT TO LQ RECORD WITH CHNG AIN:'.00014610
+             10 WC-HEADER10            PIC X(40) VALUE                  00014700
+R5621                          'NO OF LQ TO HQ RECORDS WITH CHNGD AIN:'.00014810
+             10 WC-HEADER11            PIC X(40) VALUE                  00014900
+R5621                          'NUMBER OF PINS IMPACTED              :'.00015010
+             10 WC-HEADER12            PIC X(40) VALUE                  00015100
+R5621                          'NUMBER OF DINS SENT TO REAPPLY       :'.00015210
+             10 WC-HEADER13            PIC X(40) VALUE                  00015300
+R5621                          'NUMBER OF LINS DELETED               :'.00015410
+             10 WC-HEADER14            PIC X(40) VALUE                  00015500
+                               'TOTAL CPU TIME                       :'.00015600
+             10 WC-HEADER15            PIC X(40) VALUE                  00015700
+                               'TOTAL ELAPSED TIME                   :'.00015800
+R5621        10 WC-HEADER16            PIC X(40) VALUE                  00015900
+R5621                          'NO OF TEXT TO HQ RECORD WITH CHNG AIN:'.00016000
+                                                                        00016600
+      * FLAGS                                                           00016700
+       01 WF-FLAGS.                                                     00016800
+          05 WF-EOF-AUDIT-FILE         PIC X(1)  VALUE 'N'.             00016900
+             88 EOF-AUDIT-FILE                   VALUE 'Y'.             00017000
+             88 NO-EOF-AUDIT-FILE                VALUE 'N'.             00017100
+                                                                        00017101
+          05 WF-EOF-DIN-FILE           PIC X(1)  VALUE 'N'.             00017110
+             88 EOF-DIN-FILE                     VALUE 'Y'.             00017120
+             88 NO-EOF-DIN-FILE                  VALUE 'N'.             00017130
+                                                                        00017140
+          05 WF-CALL-MODE              PIC X(1).                        00017200
+             88 UPDATE-MODE                      VALUE 'U'.             00017300
+             88 READ-MODE                        VALUE 'R'.             00017400
+                                                                        00017500
+      * WORKING STORAGE VARIABLES                                       00017600
+       01 WS-WORKING-STORAGE.                                           00017700
+          05 WS-ABEND-FIELDS.                                           00017800
+             10 WS-ABEND-CODE          PIC 9(3)  VALUE 999.             00017900
+             10 WS-ABEND-SECTION       PIC X(25) VALUE SPACES.          00018000
+             10 WS-DUMP-FLAG           PIC X(1)  VALUE 'Y'.             00018100
+             10 WS-ERROR-MSG.                                           00018200
+                15 WS-ERROR            PIC X(52) VALUE SPACES.          00018300
+          05 WS-AUXILLARY.                                              00018400
+             10 WS-RETURN-CODE         PIC X(4)  VALUE ZEROS.           00018500
+             10 WS-LOGGING-LEVEL       PIC 9(4)  VALUE ZEROS.           00018600
+                                                                        00018800
+      * INDICES                                                         00018900
+             10  WS-IND                PIC S9(04) COMP VALUE ZEROS.     00019000
+             10  WS-PREV-DIN           PIC S9(18) COMP VALUE ZEROS.     00019300
+             10  WS-DIN-NUMERIC        PIC 9(19)      VALUE ZEROS.      00019400
+             10  WS-DIN-APLHANUM REDEFINES WS-DIN-NUMERIC               00019410
+                                       PIC X(19).                       00019420
+                                                                        00019500
+      *  ET530 COMMUNICATION AREA                                       00019600
+      *                                                                 00019610
+        01 ET530-COMMAREA.                                              00019700
+           COPY ET530LS  REPLACING ==:ET530:== BY ==ET530==.            00019800
+      *                                                                 00019900
+      *  COPY BOOK FOR ELAPSED TIME CALCULATION                         00020000
+           COPY E1902TCC.                                               00020100
+      *                                                                 00020200
+      *  COPY BOOK FOR STATISTICAL FILE                                 00020210
+       01  STATS-REC.                                                   00020300
+           COPY EDFNAECC REPLACING ==:PFX:== BY ==STAT==.               00020400
+      *                                                                 00020500
+       01 FILLER                       PIC X(50) VALUE                  00020600
+              'PROGRAM EDBNAECE - END OF WORKING STORAGE SECTION'.      00020700
+                                                                        00020800
+      ******************************************************************00020900
+      *   LINKAGE SECTION                                              *00021000
+      ******************************************************************00021100
+       LINKAGE SECTION.                                                 00021200
+                                                                        00021300
+       01 LS-VARIABLES.                                                 00021400
+          05 LS-LOG-LENGTH             PIC S9(4) COMP.                  00021500
+          05 LS-LOGGING-LEVEL          PIC 9(4).                        00021600
+          05 LS-CALL-MODE              PIC X(1).                        00021700
+      *                                                                 00021800
+      ******************************************************************00021900
+      *       PROCEDURE DIVISION                                       *00022000
+      ******************************************************************00022100
+       PROCEDURE DIVISION USING LS-VARIABLES.                           00022200
+                                                                        00022300
+      ******************************************************************00022400
+      *       MAIN SECTION                                            **00022500
+      ******************************************************************00022600
+      *----------------------------------------------------------------*00022700
+       0000-MAIN SECTION.                                               00022800
+      *----------------------------------------------------------------*00022900
+      ******************************************************************00023000
+      * CALLED BY          : NONE                                      *00023100
+      * CALLING SECTIONS   : A0000-INITIALIZATION                      *00023200
+      *                    : B0000-MAIN-PROCESS                        *00023300
+      *                    : C0000-TERMINATION                         *00023400
+      *                    : Z900-CALL-LOGGING                         *00023500
+      *                    : 0000-CHECK-FOR-PARAM-PASSED               *00023600
+      * SUBROUTINES CALLED : NONE                                      *00023700
+      * COMMENTS           : THIS SECTION CALLS INITILIZATION, MAIN    *00023800
+      *                    : PROCESSING ,TERMINATION SECTION AND       *00023900
+      *                    : PARAMETER PASSED CHECK SECTION            *00024000
+      ******************************************************************00024100
+      *                                                                 00024200
+                                                                        00024300
+           PERFORM 0000-CHECK-FOR-PARAM-PASSED                          00024400
+                                                                        00024500
+      *    WRITES PROGRAM ENTRING LOGGING MESSAGE(INFORMATIONAL)        00024600
+           MOVE LS-LOGGING-LEVEL        TO WS-LOGGING-LEVEL             00024700
+                                                                        00024900
+NASEVG     IF WS-LOGGING-LEVEL > 1                                      00025000
+              MOVE 'I'                  TO ET530-LOG-TYPE               00025100
+              MOVE 'ENTERING PROGRAM'                                   00025200
+                                        TO ET530-LOG-TEXT               00025300
+              PERFORM Z900-CALL-LOGGING                                 00025400
+           END-IF                                                       00025500
+      *                                                                 00025600
+           PERFORM A0000-INITIALIZATION                                 00025700
+      *                                                                 00025800
+           PERFORM B0000-MAIN-PROCESS                                   00025900
+      *                                                                 00026000
+           PERFORM C0000-TERMINATION                                    00026100
+      *                                                                 00026200
+      *    WRITES PROGRAM ENTRING LOGGING MESSAGE(INFORMATIONAL)        00026300
+                                                                        00026400
+NASEVG     IF WS-LOGGING-LEVEL > 1                                      00026500
+              MOVE 'I'                  TO ET530-LOG-TYPE               00026600
+              MOVE 'EXITING PROGRAM'    TO ET530-LOG-TEXT               00026700
+              PERFORM Z900-CALL-LOGGING                                 00026800
+           END-IF                                                       00026900
+                                                                        00027000
+           STOP RUN                                                     00027100
+           .                                                            00027200
+                                                                        00027300
+       0000-EXIT.                                                       00027400
+           EXIT.                                                        00027500
+      *----------------------------------------------------------------*00027600
+       0000-CHECK-FOR-PARAM-PASSED SECTION.                             00027700
+      *----------------------------------------------------------------*00027800
+      ******************************************************************00027900
+      *CALLED BY          : 0000-MAIN                                  *00028000
+      *CALLING SECTIONS   : Z999-ABEND                                 *00028100
+      *SUBROUTINES CALLED : NONE                                       *00028200
+      *COMMENTS           : CHECKS THE CALLING MODE PASSED IS CORRECT  *00028300
+      *                   : AND ALSO CHECKS LOGGING LEVEL              *00028400
+      ******************************************************************00028500
+      *                                                                 00028600
+      *CHECKS IF LOGGING LEVEL IS NUMERIC                               00028700
+           IF LS-LOGGING-LEVEL IS NUMERIC                               00028800
+               CONTINUE                                                 00028810
+           ELSE                                                         00028820
+               STRING 'LOGGING LEVEL IS NOT NUMERIC '                   00028900
+                       LS-LOGGING-LEVEL                                 00029000
+                       DELIMITED BY SIZE INTO WS-ERROR                  00029100
+               END-STRING                                               00029200
+                                                                        00029300
+               MOVE '0000-CHECK-FOR-PARAM-PASSED'                       00029400
+                                        TO WS-ABEND-SECTION             00029500
+               MOVE WC-ONE              TO WS-ABEND-CODE                00029600
+               PERFORM Z999-ABEND                                       00029700
+           END-IF                                                       00029800
+                                                                        00029810
+      *CHECKS IF CALLING MODE IS READ AND UPDATE MODE ONLY              00029900
+           MOVE LS-CALL-MODE            TO WF-CALL-MODE                 00029910
+      *                                                                 00029920
+           IF UPDATE-MODE OR READ-MODE                                  00030000
+               CONTINUE                                                 00030010
+           ELSE                                                         00030020
+               STRING 'CALLING MODE IS OTHER THAN U AND R,CALL MODE IS' 00030100
+                       LS-CALL-MODE                                     00030200
+                       DELIMITED BY SIZE INTO WS-ERROR                  00030300
+               END-STRING                                               00030400
+                                                                        00030500
+               MOVE '0000-CHECK-FOR-PARAM-PASSED'                       00030600
+                                        TO WS-ABEND-SECTION             00030700
+               MOVE WC-ONE              TO WS-ABEND-CODE                00030800
+               PERFORM Z999-ABEND                                       00030900
+           END-IF                                                       00031000
+           .                                                            00031100
+       0000-EXIT.                                                       00031200
+            EXIT.                                                       00031300
+      *                                                                 00031310
+      *----------------------------------------------------------------*00031400
+       A0000-INITIALIZATION SECTION.                                    00031500
+      *----------------------------------------------------------------*00031600
+      ******************************************************************00031700
+      * CALLED BY          : 0000-MAIN                                 *00031800
+      * CALLING SECTIONS   : U0001-OPEN-FILES                          *00031900
+      *                    : U0002-READ-AUDIT-FILE                     *00032000
+      *                    : U0003-READ-STATS-FILE                     *00032100
+      * SUBROUTINES CALLED : E1902                                     *00032200
+      * COMMENTS           : CALLS ROUTINE E1902 TO GET CPU TIME AND   *00032300
+      *                    : AND ELAPSED TIME AND CALLS SECTIONS TO    *00032400
+      *                    : OPEN FILES,READ AUDIT AND STATS FILE.     *00032500
+      *                    : INITIALIZES REQUIRED VARIABLES.           *00032600
+      ******************************************************************00032700
+      *                                                                 00032800
+           CALL WC-E1902 USING E1902TCC                                 00032900
+                                                                        00032910
+           INITIALIZE WA-DIN-COUNT                                      00033000
+                      WA-PIN-COUNT                                      00033100
+                      WA-LIN-COUNT                                      00033200
+                      WA-ERRORED-REC                                    00033300
+                      WS-RETURN-CODE                                    00033310
+                      WS-IND                                            00033330
+                      WS-PREV-DIN                                       00033340
+                      WS-DIN-NUMERIC                                    00033400
+                                                                        00033401
+           SET NO-EOF-AUDIT-FILE        TO TRUE                         00033402
+           SET NO-EOF-DIN-FILE          TO TRUE                         00033403
+                                                                        00033410
+           PERFORM U0001-OPEN-FILES                                     00033500
+           PERFORM U0002-READ-AUDIT-FILE                                00033600
+           PERFORM U0003-READ-STATS-FILE                                00033700
+           PERFORM U0004-READ-DIN-FILE                                  00033710
+           .                                                            00033800
+      *                                                                 00033900
+       A0000-EXIT.                                                      00034000
+            EXIT.                                                       00034100
+      *                                                                 00034110
+      *----------------------------------------------------------------*00034200
+       B0000-MAIN-PROCESS   SECTION.                                    00034300
+      *----------------------------------------------------------------*00034400
+      ******************************************************************00034500
+      * CALLED BY          : 0000-MAIN                                 *00034600
+      * CALLING SECTIONS   : B0001-GENERATE-STATS-INFO                 *00034700
+      *                    : B0002-CHECK-FOR-REAPPLY-WRITE             *00034800
+      *                    : U0002-READ-AUDIT-FILE                     *00034900
+      * SUBROUTINES CALLED : NONE                                      *00035000
+      * COMMENTS           : THIS SECTION CALLS SECTIONS TO GENERATE   *00035100
+      *                    : STATS INFO, READ AUDIT FILE AND TO CHECK  *00035200
+      *                    : REAPPLY WRITE CONDITION ACC TO CALL MODE  *00035300
+      ******************************************************************00035400
+      *                                                                 00035500
+           PERFORM B1000-PROCESS-AUDIT-FILE                             00035600
+             UNTIL EOF-AUDIT-FILE                                       00035601
+                                                                        00035602
+           PERFORM B2000-PROCESS-DIN-FILE                               00035610
+             UNTIL EOF-DIN-FILE                                         00035620
+           .                                                            00037000
+      *                                                                 00037100
+       B0000-EXIT.                                                      00037200
+            EXIT.                                                       00037300
+      *                                                                 00037310
+      *-----------------------------------------------------------------00037400
+       B1000-PROCESS-AUDIT-FILE SECTION.                                00037500
+      *-----------------------------------------------------------------00037600
+      ******************************************************************00037700
+      * CALLED BY          : B0000-MAIN-PROCESS                        *00037800
+      * CALLING SECTIONS   : B0001-GENERATE-STATS-INFO                 *00037910
+      *                    : B0002-CHECK-FOR-REAPPLY-WRITE             *00037920
+      *                    : U0002-READ-AUDIT-FILE                     *00037930
+      * SUBROUTINES CALLED : NONE                                      *00038000
+      * COMMENTS           : ACCUMULATES VARIOUS COUNTS TO POPULATE    *00038100
+      *                    : FIELDS OF STATS FILE                      *00038200
+      ******************************************************************00038300
+      *                                                                 00038400
+           EVALUATE TRUE                                                00038401
+              WHEN AUD-ERROR                                            00038402
+                 ADD  +1                TO WA-ERRORED-REC               00038403
+                                                                        00038407
+              WHEN AUD-PROCESSED                                        00038408
+                 ADD AUD-PIN-COUNT      TO WA-PIN-COUNT                 00038409
+                 ADD AUD-NON-STD-LIN-COUNT                              00038410
+                                        TO WA-LIN-COUNT                 00038411
+                                                                        00038413
+              WHEN OTHER                                                00038414
+                 CONTINUE                                               00038415
+                                                                        00038416
+           END-EVALUATE                                                 00038417
+                                                                        00038418
+           PERFORM U0002-READ-AUDIT-FILE                                00038419
+           .                                                            00038420
+      *                                                                 00038421
+       B1000-EXIT.                                                      00038422
+            EXIT.                                                       00038423
+      *                                                                 00038424
+      *-----------------------------------------------------------------00039300
+       B2000-PROCESS-DIN-FILE SECTION.                                  00039400
+      *-----------------------------------------------------------------00039500
+      ******************************************************************00039600
+      * CALLED BY          : B0000-MAIN-PROCESS                        *00039700
+      * CALLING SECTIONS   : B0003-FORMAT-REAPPLY-DATA                 *00039800
+      * SUBROUTINES CALLED : NONE                                      *00039900
+      * COMMENTS           : BASED ON CALLING MODE THIS SECTION CALLS  *00040000
+      *                    : SECTION TO POPULATE AND FORMAT REAPPLY    *00040100
+      *                    : DATA                                      *00040200
+      ***************************************************************** 00040300
+      *                                                                 00040500
+           MOVE ZERO                    TO REPL-NO-OF-SUBJ              00040501
+                                                                        00040502
+           MOVE D-INP-DIN               TO WS-PREV-DIN                  00040510
+                                           REPL-DIN                     00040520
+           MOVE WS-PREV-DIN             TO WS-DIN-NUMERIC               00040530
+           MOVE WS-DIN-APLHANUM(7:4)    TO REPL-SRC-PROCESS             00040540
+           MOVE FUNCTION CURRENT-DATE   TO REPL-RUN-DATE                00040550
+                                                                        00040560
+           MOVE D-INP-SUBJ-NB           TO REPL-SUBJ-NB(1)              00040580
+           MOVE D-INP-SUBJ-SEQ-NB       TO REPL-SUBJ-SEQ(1)             00040581
+      *                                                                 00040582
+           ADD +1                       TO REPL-NO-OF-SUBJ              00040583
+NAS001     IF (REPL-SRC-PROCESS = 80 OR 60 OR 70 OR 50)                 00040585
+NAS001         ADD 1                    TO REPL-NO-OF-SUBJ              00040587
+NAS001         MOVE REPL-SUBJ-SEQ(1)                                    00040588
+NAS001                                  TO REPL-SUBJ-SEQ(2)             00040589
+NAS001         MOVE 2                   TO REPL-SUBJ-NB(2)              00040590
+NAS001     END-IF                                                       00040591
+           PERFORM U0004-READ-DIN-FILE                                  00040592
+                                                                        00040593
+           IF UPDATE-MODE                                               00040594
+               PERFORM U0005-WRITE-REAPPLY-FILE                         00040595
+           END-IF                                                       00040596
+                                                                        00040597
+           ADD +1                       TO WA-DIN-COUNT                 00040598
+           .                                                            00040600
+      *                                                                 00041000
+       B2000-EXIT.                                                      00041100
+           EXIT.                                                        00041200
+      *                                                                 00041300
+      *-----------------------------------------------------------------00047300
+       C0000-TERMINATION    SECTION.                                    00047400
+      *-----------------------------------------------------------------00047500
+      ******************************************************************00047600
+      * CALLED BY          : 0000-MAIN                                 *00047700
+      * CALLING SECTIONS   : U0006-CLOSE-FILES                         *00047800
+      *                    : C0001-POPULATE-STATS                      *00047900
+      *                    : C0002-POP-STATS-DETAIL-DATA               *00048000
+      *                    : U0007-REWRITE-STATS-FILE                  *00048100
+      *                    : U0009-CLOSE-STAT-FILES                    *00048200
+      * SUBROUTINES CALLED : NONE                                      *00048300
+      * COMMENTS           : CALLS SECTION TO CLOSE ALL THE FILES USED *00048400
+      *                    : ,TO POPULATE STATS DATA,DISPLAY STATS AND *00048500
+      *                    : TO UPDATE STATS FILE.                     *00048600
+      ******************************************************************00048700
+      *                                                                 00048800
+           PERFORM U0006-CLOSE-FILES                                    00048900
+           PERFORM C0001-POPULATE-STATS                                 00049000
+           PERFORM C0002-POP-STATS-DETAIL-DATA                          00049100
+           PERFORM U0007-REWRITE-STATS-FILE                             00049200
+           PERFORM U0009-CLOSE-STAT-FILES                               00049300
+                                                                        00049301
+           IF WS-LOGGING-LEVEL > 0                                      00049310
+              DISPLAY '***********************************'             00049320
+              DISPLAY 'DINS TO BE REAPPLIED:' WA-DIN-COUNT              00049340
+              DISPLAY 'RECORDS ERRORED OUT :' WA-ERRORED-REC            00049350
+              DISPLAY '***********************************'             00049360
+           END-IF                                                       00049370
+           .                                                            00049400
+                                                                        00049500
+       C0000-EXIT.                                                      00049600
+            EXIT.                                                       00049700
+      *                                                                 00049800
+      *-----------------------------------------------------------------00049900
+       C0001-POPULATE-STATS SECTION.                                    00050000
+      *-----------------------------------------------------------------00050100
+      ******************************************************************00050200
+      * CALLED BY          : C0000-TERMINATION                         *00050300
+      * CALLING SECTIONS   : NONE                                      *00050400
+      * SUBROUTINES CALLED : E1902                                     *00050500
+      * COMMENTS           : CALLS E1902 TO GET CPU TIME,ELAPSED TIME  *00050600
+      *                    : AND ALSO POPULATES STATS INPUT            *00050700
+      ******************************************************************00050800
+      *                                                                 00050900
+                                                                        00051000
+           MOVE WA-DIN-COUNT            TO STAT-REAPPLY-DIN-CT          00051100
+           MOVE WA-PIN-COUNT            TO STAT-PIN-CT                  00051200
+           MOVE WA-LIN-COUNT            TO STAT-LIN-DELETED             00051300
+           MOVE WA-ERRORED-REC          TO STAT-TOTAL-EXIST-ERROR-REC   00051500
+           CALL WC-E1902 USING E1902TCC                                 00051600
+                                                                        00051700
+           MOVE E1902TCC-CPU-TIME       TO STAT-EDBNAECE-CPU            00051800
+           MOVE E1902TCC-ELAPSED-TIME   TO STAT-EDBNAECE-ELP            00051900
+                                                                        00052000
+           ADD STAT-EDBNAECE-CPU        TO STAT-TOTAL-TIME-CPU          00052100
+           ADD STAT-EDBNAECE-ELP        TO STAT-TOTAL-TIME-ELP          00052200
+           .                                                            00052300
+      *                                                                 00052400
+       C0001-EXIT.                                                      00052500
+           EXIT.                                                        00052600
+      *                                                                 00052700
+      *-------------------------------------------------------------    00052800
+       C0002-POP-STATS-DETAIL-DATA SECTION.                             00052900
+      *-------------------------------------------------------------    00053000
+      ******************************************************************00053100
+      * CALLED BY          : C0000-TERMINATION                         *00053200
+      * CALLING SECTIONS   : U0008-WRITE-STATS-DETAIL-FILE             *00053300
+      * SUBROUTINES CALLED : NONE                                      *00053400
+      * COMMENTS           : POPULATE THE DATA PART OF THE DISPLAY FILE*00053500
+      *                    : LAYOUT AND ALSO CALL SECTION TO WRITE     *00053600
+      *                    : DISPLAY STATISTICS FILE                   *00053700
+      ******************************************************************00053800
+      *                                                                 00053900
+           MOVE WC-HEADER1              TO STAD-HEADER                  00054000
+           MOVE STAT-LQ-REC             TO STAD-DETAILS                 00054100
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00054200
+      *                                                                 00054300
+           MOVE WC-HEADER2              TO STAD-HEADER                  00054400
+           MOVE STAT-TXT-REC            TO STAD-DETAILS                 00054500
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00054600
+      *                                                                 00054700
+           MOVE WC-HEADER3              TO STAD-HEADER                  00054800
+           MOVE STAT-TOTAL-EXIST-ERROR-REC                              00054900
+                                        TO STAD-DETAILS                 00055000
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00055100
+      *                                                                 00055200
+           MOVE WC-HEADER4              TO STAD-HEADER                  00055300
+           MOVE STAT-TOTAL-RECORDS      TO STAD-DETAILS                 00055400
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00055500
+      *                                                                 00055600
+           MOVE WC-HEADER5              TO STAD-HEADER                  00055700
+           MOVE STAT-UNCHNGD-ADDR       TO STAD-DETAILS                 00055800
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00055900
+      *                                                                 00056000
+           MOVE WC-HEADER6              TO STAD-HEADER                  00056100
+           MOVE STAT-TXT-LQ-AIN-UNCHG   TO STAD-DETAILS                 00056200
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00056300
+      *                                                                 00056400
+           MOVE WC-HEADER7              TO STAD-HEADER                  00056500
+           MOVE STAT-LQ-HQ-AIN-UNCHG    TO STAD-DETAILS                 00056600
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00056700
+      *                                                                 00056800
+           MOVE WC-HEADER8              TO STAD-HEADER                  00056900
+           MOVE STAT-UNCHG-LQ-AIN-CHGD  TO STAD-DETAILS                 00057000
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00057100
+      *                                                                 00057200
+           MOVE WC-HEADER9              TO STAD-HEADER                  00057300
+           MOVE STAT-TXT-LQ-AIN-CHG     TO STAD-DETAILS                 00057400
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00057500
+      *                                                                 00057600
+           MOVE WC-HEADER10             TO STAD-HEADER                  00057700
+           MOVE STAT-LQ-HQ-AIN-CHG      TO STAD-DETAILS                 00057800
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00057900
+      *                                                                 00058000
+R5621      MOVE WC-HEADER16             TO STAD-HEADER                  00058010
+R5621      MOVE STAT-TXT-HQ-AIN-CHG     TO STAD-DETAILS                 00058020
+R5621      PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00058030
+      *                                                                 00058040
+           MOVE WC-HEADER11             TO STAD-HEADER                  00058100
+           MOVE STAT-PIN-CT             TO STAD-DETAILS                 00058200
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00058300
+      *                                                                 00058400
+           MOVE WC-HEADER12             TO STAD-HEADER                  00058500
+           MOVE STAT-REAPPLY-DIN-CT     TO STAD-DETAILS                 00058600
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00058700
+      *                                                                 00058800
+           MOVE WC-HEADER13             TO STAD-HEADER                  00058900
+           MOVE STAT-LIN-DELETED        TO STAD-DETAILS                 00059000
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00059100
+      *                                                                 00059200
+           MOVE WC-HEADER14             TO STAD-HEADER                  00059300
+           MOVE STAT-TOTAL-TIME-CPU     TO STAD-DETAILS                 00059400
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00059500
+      *                                                                 00059600
+           MOVE WC-HEADER15             TO STAD-HEADER                  00059700
+           MOVE STAT-TOTAL-TIME-ELP     TO STAD-DETAILS                 00059800
+           PERFORM U0008-WRITE-STATS-DETAIL-FILE                        00059900
+           .                                                            00060000
+      *                                                                 00060100
+       C0002-EXIT.                                                      00060200
+            EXIT.                                                       00060300
+      *                                                                 00060400
+      *-------------------------------------------------------------    00060500
+       U0001-OPEN-FILES SECTION.                                        00060600
+      *-------------------------------------------------------------    00060700
+      ******************************************************************00060800
+      * CALLED BY          : A0000-INITIALIZATION                      *00060900
+      * CALLING SECTIONS   : NONE                                      *00061000
+      * SUBROUTINES CALLED : NONE                                      *00061100
+      * COMMENTS           : OPENS ALL FILES IN RESPECTIVE MODES       *00061200
+      *                    :                                           *00061300
+      ******************************************************************00061400
+      *                                                                 00061500
+           OPEN INPUT  AUDIT                                            00061600
+                       DIN-INP                                          00061610
+                I-O    STATS                                            00061700
+                OUTPUT STATD                                            00061800
+                       REAPPLY                                          00061810
+           INITIALIZE  REPL-SRC-PROCESS                                 00061820
+                       REPL-RUN-DATE                                    00061830
+                       REPL-DIN                                         00062300
+                       REPL-NO-OF-SUBJ                                  00062400
+           .                                                            00062410
+      *                                                                 00062420
+       U0001-EXIT.                                                      00062500
+            EXIT.                                                       00062600
+      *                                                                 00062700
+      *-------------------------------------------------------------    00062800
+       U0002-READ-AUDIT-FILE  SECTION.                                  00062900
+      *-------------------------------------------------------------    00063000
+      ******************************************************************00063100
+      * CALLED BY          : B0000-MAIN-PROCESS                        *00063200
+      *                    : A0000-INITIALIZATION                      *00063300
+      * CALLING SECTIONS   : NONE                                      *00063400
+      * SUBROUTINES CALLED : NONE                                      *00063500
+      * COMMENTS           : READS INPUT AUDIT FILE                    *00063600
+      *                    :                                           *00063700
+      ******************************************************************00063800
+      *                                                                 00063900
+           READ AUDIT                                                   00064000
+               AT END                                                   00064100
+                  SET EOF-AUDIT-FILE    TO TRUE                         00064200
+           END-READ                                                     00064300
+           .                                                            00064400
+      *                                                                 00064500
+      *                                                                 00064600
+       U0002-EXIT.                                                      00064700
+           EXIT.                                                        00064800
+      *                                                                 00064900
+      *----------------------------------------------------------------*00065000
+       U0003-READ-STATS-FILE   SECTION.                                 00065100
+      *----------------------------------------------------------------*00065200
+      ******************************************************************00065300
+      * CALLED BY          : A0000-INITIALIZATION                      *00065400
+      * CALLING SECTIONS   : NONE                                      *00065500
+      * SUBROUTINES CALLED : NONE                                      *00065600
+      * COMMENTS           : READS STATS FILE                          *00065700
+      *                    :                                           *00065800
+      ******************************************************************00065900
+      *                                                                 00066000
+           READ STATS INTO STATS-REC                                    00066100
+           END-READ                                                     00066200
+           .                                                            00066300
+      *                                                                 00066400
+       U0003-EXIT.                                                      00066500
+           EXIT.                                                        00066600
+      *                                                                 00066700
+      *----------------------------------------------------------------*00066710
+       U0004-READ-DIN-FILE SECTION.                                     00066720
+      *----------------------------------------------------------------*00066730
+      ******************************************************************00066740
+      * CALLED BY          : A0000-INITIALIZATION                      *00066750
+      * CALLING SECTIONS   : NONE                                      *00066760
+      * SUBROUTINES CALLED : NONE                                      *00066770
+      * COMMENTS           : READS DIN FILE                            *00066780
+      *                    :                                           *00066790
+      ******************************************************************00066791
+      *                                                                 00066792
+           READ DIN-INP                                                 00066793
+               AT END                                                   00066794
+                  SET EOF-DIN-FILE      TO TRUE                         00066795
+           END-READ                                                     00066796
+           .                                                            00066797
+      *                                                                 00066798
+       U0004-EXIT.                                                      00066799
+           EXIT.                                                        00066800
+      *                                                                 00066801
+      *---------------------------------------------------------------* 00066810
+       U0005-WRITE-REAPPLY-FILE SECTION.                                00066900
+      *---------------------------------------------------------------* 00067000
+      ******************************************************************00067100
+      * CALLED BY          : B0003-FORMAT-REAPPLY-DATA                 *00067200
+      * CALLING SECTIONS   : NONE                                      *00067300
+      * SUBROUTINES CALLED : NONE                                      *00067400
+      * COMMENTS           : WRITES REAPPLY FILE                       *00067500
+      ******************************************************************00067600
+      *                                                                 00067700
+           WRITE REAPPLY-REC                                            00067800
+           MOVE WC-SPACES               TO REAPPLY-REC                  00067900
+           .                                                            00068000
+      *                                                                 00068100
+       U0005-EXIT.                                                      00068200
+           EXIT.                                                        00068300
+      *                                                                 00068400
+      *-------------------------------------------------------------    00068500
+       U0006-CLOSE-FILES SECTION.                                       00068600
+      *-------------------------------------------------------------    00068700
+      ******************************************************************00068800
+      * CALLED BY          : C0000-TERMINATION                         *00068900
+      * CALLING SECTIONS   : NONE                                      *00069000
+      * SUBROUTINES CALLED : NONE                                      *00069100
+      * COMMENTS           : CLOSES AUDIT FILE AND REAPPLY FILE IN     *00069200
+      *                    : UPDATE MODE                               *00069300
+      ******************************************************************00069400
+      *                                                                 00069500
+           CLOSE AUDIT                                                  00069600
+                 DIN-INP                                                00069610
+                 REAPPLY                                                00069700
+           .                                                            00070100
+      *                                                                 00070200
+       U0006-EXIT.                                                      00070300
+            EXIT.                                                       00070400
+      *----------------------------------------------------------------*00070500
+       U0007-REWRITE-STATS-FILE   SECTION.                              00070600
+      *----------------------------------------------------------------*00070700
+      ******************************************************************00070800
+      * CALLED BY          : C0000-TERMINATION                         *00070900
+      * CALLING SECTIONS   : NONE                                      *00071000
+      * SUBROUTINES CALLED : NONE                                      *00071100
+      * COMMENTS           : POPULATES LOCAL COPY OF STATS FILE TO     *00071200
+      *                    : STAT FILE RECORD AND UPDATES STATS FILE   *00071300
+      ******************************************************************00071400
+      *                                                                 00071500
+           MOVE STATS-REC                   TO FD-STATS-REC             00071600
+           REWRITE FD-STATS-REC                                         00071700
+           .                                                            00071800
+      *                                                                 00071900
+      *                                                                 00072000
+       U0007-EXIT.                                                      00072100
+           EXIT.                                                        00072200
+      *                                                                 00072300
+      *-------------------------------------------------------------    00072400
+       U0008-WRITE-STATS-DETAIL-FILE SECTION.                           00072500
+      *-------------------------------------------------------------    00072600
+      ******************************************************************00072700
+      * CALLED BY          : C0002-POP-STATS-DETAIL-DATA               *00072800
+      * CALLING SECTIONS   : NONE                                      *00072900
+      * SUBROUTINES CALLED : NONE                                      *00073000
+      * COMMENTS           : WRITES THE DETAILED STATS FILE            *00073100
+      ******************************************************************00073200
+      *                                                                 00073300
+           WRITE STATS-DETAIL                                           00073400
+           .                                                            00073500
+      *                                                                 00073600
+       U0008-EXIT.                                                      00073700
+           EXIT.                                                        00073800
+      *                                                                 00073900
+      *                                                                 00074000
+      *-------------------------------------------------------------    00074100
+       U0009-CLOSE-STAT-FILES SECTION.                                  00074200
+      *-------------------------------------------------------------    00074300
+      ******************************************************************00074400
+      * CALLED BY          : C0000-TERMINATION                         *00074500
+      * CALLING SECTIONS   : NONE                                      *00074600
+      * SUBROUTINES CALLED : NONE                                      *00074700
+      * COMMENTS           : CLOSES STATS FILE AND DISPLAY STATS FILE  *00074800
+      *                    :                                           *00074900
+      ******************************************************************00075000
+      *                                                                 00075100
+           CLOSE STATS                                                  00075200
+                 STATD                                                  00075300
+               .                                                        00075400
+      *                                                                 00075500
+       U0009-EXIT.                                                      00075600
+            EXIT.                                                       00075700
+      *----------------------------------------------------------------*00075800
+       Z900-CALL-LOGGING SECTION.                                       00075900
+      *----------------------------------------------------------------*00076000
+      *    LOGGING USING PASSED MODULE                                  00076100
+           IF  WS-RETURN-CODE = '0000'                                  00076200
+               MOVE '0000'             TO ET530-LOG-IDENTITY            00076210
+           ELSE                                                         00076400
+               MOVE WS-RETURN-CODE     TO ET530-LOG-IDENTITY            00076500
+           END-IF                                                       00076600
+      *                                                                 00076700
+           MOVE WC-PROG-NAME           TO ET530-LOG-PROGRAM             00076800
+      *                                                                 00076900
+           CALL WC-ET530        USING ET530-COMMAREA                    00077000
+                ON EXCEPTION                                            00077100
+                MOVE 'FAIL: CALL TO ET530 '                             00077200
+                                         TO WS-ERROR                    00077300
+                MOVE 'Z900-CALL-LOGGING' TO WS-ABEND-SECTION            00077400
+                MOVE   020               TO WS-ABEND-CODE               00077500
+                PERFORM Z999-ABEND                                      00077600
+           END-CALL                                                     00077700
+           .                                                            00077800
+      *                                                                 00077900
+       Z900-EXIT.                                                       00078000
+            EXIT.                                                       00078100
+      *                                                                 00078200
+      **************************************************************    00078300
+      * THIS SECTION ABENDS THE PROGRAM IN CASE OF AN ERROR        *    00078400
+      **************************************************************    00078500
+      *-------------------------------------------------------------    00078600
+       Z999-ABEND SECTION.                                              00078700
+      *-------------------------------------------------------------    00078800
+                                                                        00078900
+      *                                                                 00079000
+           DISPLAY '===================='                               00079100
+           DISPLAY 'EDBNAECE IS ABENDING'                               00079200
+           DISPLAY '===================='                               00079300
+           DISPLAY WS-ERROR-MSG                                         00079400
+           DISPLAY 'ERROR IN PROGRAM ' WC-PROG-NAME                     00079500
+           DISPLAY 'IN SECTION : ' WS-ABEND-SECTION                     00079600
+      *                                                                 00079700
+           CALL   'ABEND' USING WS-ABEND-CODE WS-DUMP-FLAG              00079800
+           .                                                            00079900
+      *                                                                 00080000
+       Z999-EXIT.                                                       00080100
+           EXIT.                                                        00080200
