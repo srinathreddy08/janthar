@@ -1,0 +1,217 @@
+Business Requirements
+Overview
+•
+
+Purpose: This system is designed to process audit and DIN input files related to NAS Evergreening, aggregating counts of DINs, PINs, and LINs, and updating statistical records accordingly. It generates detailed display statistics and, in update mode, creates a reapply file for further processing. The system fits into the business by supporting data quality monitoring and reapplication processes within the NAS Evergreening framework.
+
+•
+
+Business Impact: Operating as a batch process called by a job, the system reads audit and DIN input files, accumulates key counts, and updates statistics files. It provides visibility into data quality and processing outcomes through detailed statistics and logs. The reapply file generated in update mode enables corrective or additional processing steps, ensuring data integrity and operational continuity.
+
+Objectives
+•
+
+Primary Objective: To accurately accumulate and update counts of DINs, PINs, and LINs from audit and DIN input files, generate detailed statistics for monitoring, and produce a reapply file when in update mode.
+
+•
+
+Key Outcomes: - Improved tracking of data processing metrics such as counts of DINs, PINs, LINs, and errored records.
+
+•
+
+Generation of detailed statistics files for operational insight.
+
+•
+
+Creation of reapply files to support data correction or reprocessing.
+
+•
+
+Enhanced logging for audit and troubleshooting purposes.
+
+Business Rules & Requirements
+•
+
+Business Purpose: The module aims to consolidate input data counts from audit and DIN files, maintain updated statistics reflecting processing results, and support reapplication of DINs when updates occur.
+
+•
+
+Business Rules: - Only two call modes are valid: Update ('U') and Read ('R').
+
+•
+
+Audit file records are processed to accumulate PIN and LIN counts and track errored records.
+
+•
+
+DIN input records are processed to increment DIN counts and, in update mode, to write corresponding reapply records.
+
+•
+
+Statistics files are read at start and updated at termination with accumulated counts and processing times.
+
+•
+
+Detailed statistics include various quality and change metrics related to input records.
+
+•
+
+Logging occurs at entry and exit if logging level is above a threshold.
+
+•
+
+The reapply file is only written in update mode.
+
+•
+
+System Impact: This module ensures accurate aggregation and reporting of processing metrics, which are critical for monitoring NAS Evergreening data quality and operational status. It supports downstream processes by generating reapply files when necessary, thus impacting data correction workflows.
+
+•
+
+Constraints: - Input files must be correctly formatted and accessible.
+
+•
+
+Call mode must be either 'U' or 'R'; other modes cause program abend.
+
+•
+
+Logging level must be numeric; invalid values cause program abend.
+
+•
+
+The system depends on external modules for CPU and elapsed time calculation and logging.
+
+Assumptions & Recommendations
+•
+
+Assumptions: - Input audit and DIN files contain valid and consistent data.
+
+•
+
+The environment provides required files and external modules (e.g., logging, time calculation).
+
+•
+
+The calling job passes correct parameters for call mode and logging level.
+
+•
+
+The system runs in a batch environment with appropriate file handling.
+
+•
+
+Recommendations: - Modernize file handling to use database or more robust data stores for better scalability.
+
+•
+
+Enhance error handling to provide more granular recovery options instead of abending.
+
+•
+
+Improve logging with structured formats for easier analysis.
+
+•
+
+Consider parameter validation and configuration externalization for flexibility.
+
+•
+
+Introduce automated monitoring and alerting based on statistics thresholds.
+
+Expected Output
+•
+
+Output: The system produces an updated statistics file reflecting accumulated counts of DINs, PINs, LINs, errored records, and processing times. It generates a detailed display statistics file with various quality and change metrics for operational review. In update mode, it creates a reapply file containing DIN records that require further processing.
+
+•
+
+Business Significance: These outputs provide essential insights into data processing quality and volume, enabling business users to monitor system performance and data integrity. The reapply file supports corrective actions, ensuring that data updates are properly applied, which is critical for maintaining accurate and reliable NAS Evergreening data.
+
+
+
+
+
+Technical Requirements
+•
+
+The system must define and map complex COBOL data structures including working storage variables, file sections, and linkage sections into equivalent C# classes and structs with appropriate data types and initializations. (Complexity: Medium)
+
+•
+
+The system must implement file handling for multiple file types (input, output, input-output) including sequential file reads and writes, with support for end-of-file detection and error handling, replicating COBOL file control logic in .NET 8. (Complexity: High)
+
+•
+
+The system must replicate the procedural flow of the COBOL program, including main processing sections, initialization, termination, and modular subroutine calls, using structured methods and classes in C# to maintain logical separation and readability. (Complexity: Medium)
+
+•
+
+The system must implement accumulator logic for statistical counts (DIN, PIN, LIN counts, errored records) with thread-safe numeric operations and appropriate data aggregation in C#. (Complexity: Low)
+
+•
+
+The system must translate COBOL conditional logic including EVALUATE statements and IF conditions into equivalent C# control flow constructs, ensuring semantic equivalence especially in error and mode checking. (Complexity: Medium)
+
+•
+
+The system must implement error handling and abend (abnormal end) processing by capturing error codes, messages, and program sections, and must integrate with .NET exception handling mechanisms to provide robust recovery and logging. (Complexity: High)
+
+•
+
+The system must integrate with external logging modules (ET530) and CPU/elapsed time calculation modules (E1902) by creating interop or service wrappers to call these functionalities or their .NET equivalents, preserving logging levels and message formats. (Complexity: High)
+
+•
+
+The system must support parameter passing and validation for call modes and logging levels, ensuring input parameters are validated for type and value constraints before processing begins. (Complexity: Medium)
+
+•
+
+The system must implement detailed statistics file generation and display logic, including formatting headers and data lines, and writing to output files, replicating the COBOL display and write operations in .NET 8 with proper encoding and formatting. (Complexity: Medium)
+
+•
+
+The system must handle conditional writing of reapply files only in update mode, ensuring transactional integrity and correct file output sequencing. (Complexity: Medium)
+
+•
+
+The system must replicate the use of copybooks for data structure definitions by modularizing common data definitions into reusable C# classes or partial classes to maintain consistency and ease maintenance. (Complexity: Medium)
+
+•
+
+The system should optimize performance by minimizing file I/O operations, using buffered reads/writes, and efficient data aggregation techniques suitable for large batch processing. (Complexity: Medium)
+
+•
+
+The system must implement security controls to restrict access to input and output files, ensuring that file operations comply with organizational security policies and .NET 8 security best practices. (Complexity: Medium)
+
+•
+
+The system should replace COBOL file handling with .NET 8 file streams or database interactions where appropriate, using Entity Framework Core for any database access, although current code indicates no DB2 tables are used. (Complexity: Low)
+
+•
+
+The system must handle integration with JCL job control scripts by translating job steps and DD statements into .NET batch job configurations or orchestration scripts, ensuring correct file dataset references and execution order. (Complexity: High)
+
+•
+
+The system must implement detailed logging with levels and message types, supporting informational, error, and abend logs, and must provide equivalent or improved logging infrastructure in .NET 8. (Complexity: Medium)
+
+•
+
+The system must ensure that all numeric computations, especially those involving signed and packed decimal types (COMP), are accurately converted to .NET numeric types with proper handling of overflows and sign. (Complexity: High)
+
+•
+
+The system must replicate the use of flags and condition names (88-levels) in COBOL by using boolean variables or enums in C# to maintain readability and logic clarity. (Complexity: Low)
+
+•
+
+The system must implement date and time handling, including current date retrieval and formatting, using .NET 8 DateTime APIs to replace COBOL intrinsic functions. (Complexity: Low)
+
+•
+
+The system must provide comprehensive unit and integration testing to validate that migrated logic produces identical statistical outputs, error handling, and file contents as the original COBOL program. (Complexity: High)
+
+
+
