@@ -1,0 +1,130 @@
+def format_assessment_as_markdown(assessment_data):
+    """Format the program documentation (handles nested JSON)"""
+    doc_data = assessment_data.get("Documentation", {})
+ 
+    # Helper to render nested dicts nicely
+    def dict_to_md(d):
+        if isinstance(d, dict):
+            lines = []
+            for k, v in d.items():
+                if isinstance(v, dict):
+                    sub_md = dict_to_md(v)
+                    lines.append(f"**{k}**:\n{sub_md}")
+                elif isinstance(v, list):
+                    list_md = "\n".join([f"  - {item}" if not isinstance(item, dict) else dict_to_md(item) for item in v])
+                    lines.append(f"**{k}**:\n{list_md}")
+                else:
+                    lines.append(f"**{k}**: {v}")
+            return "\n".join(lines)
+        return str(d)
+ 
+    def list_to_md(lst):
+        if isinstance(lst, list):
+            return "\n".join([f"- {item}" if not isinstance(item, dict) else dict_to_md(item) for item in lst])
+        return str(lst)
+ 
+    # Extract sections
+    intro = doc_data.get("1. Introduction", {})
+    scope = doc_data.get("2. Scope and Assumptions", {})
+    arch = doc_data.get("3. System Architecture", {})
+    func = doc_data.get("4. Functional Description", {})
+    logic = doc_data.get("5. Program Logic and Flow", {})
+    io_specs = doc_data.get("6. Input and Output Specifications", {})
+    summary = doc_data.get("7. Summary", {})
+ 
+    # Convert complex fields to Markdown
+    program_overview_md = dict_to_md(intro.get("Program Overview", {}))
+    scope_md = dict_to_md(scope.get("Scope", {}))
+    assumptions_md = list_to_md(scope.get("Assumptions", []))
+    high_level_design_md = dict_to_md(arch.get("High-Level Design", {}))
+    env_md = dict_to_md(arch.get("Environment and Platform Details", {}))
+    dependencies_md = list_to_md(arch.get("Dependencies", []))
+    data_sources_md = dict_to_md(arch.get("Data Sources and Storage", {}))
+    business_req_md = dict_to_md(func.get("Business Requirements", {}))
+    main_processes_md = list_to_md(func.get("Main Processes", []))
+    modules_md = dict_to_md(func.get("Modules and Subroutines", {}))
+    user_interface_md = func.get("User Interfaces", "Not applicable")
+    control_flow_md = logic.get("Control Flow", "Not provided")
+    rules_md = dict_to_md(logic.get("Rules, Logic, Validations", {}))
+    data_trans_md = logic.get("Data Transformations", "Not provided")
+    inputs_md = dict_to_md(io_specs.get("Inputs", {}))
+    outputs_md = dict_to_md(io_specs.get("Outputs", {}))
+    summary_md = dict_to_md(summary)
+ 
+    return f"""# Program Documentation
+ 
+## 1. Introduction
+### Purpose of the Document
+{intro.get("Purpose of the Document", "Not provided")}
+ 
+### Program Overview
+{program_overview_md}
+ 
+---
+ 
+## 2. Scope and Assumptions
+### Scope
+{scope_md}
+ 
+### Assumptions
+{assumptions_md}
+ 
+---
+ 
+## 3. System Architecture
+### High-Level Design
+{high_level_design_md}
+ 
+### Environment and Platform Details
+{env_md}
+ 
+### Dependencies
+{dependencies_md}
+ 
+### Data Sources and Storage
+{data_sources_md}
+ 
+---
+ 
+## 4. Functional Description
+### Business Requirements
+{business_req_md}
+ 
+### Main Processes
+{main_processes_md}
+ 
+### Modules and Subroutines
+{modules_md}
+ 
+### User Interfaces
+{user_interface_md}
+ 
+---
+ 
+## 5. Program Logic and Flow
+### Control Flow
+{control_flow_md}
+ 
+### Rules, Logic, Validations
+{rules_md}
+ 
+### Data Transformations
+{data_trans_md}
+ 
+---
+ 
+## 6. Input and Output Specifications
+### Inputs
+{inputs_md}
+ 
+### Outputs
+{outputs_md}
+ 
+---
+ 
+## 7. Summary
+{summary_md}
+ 
+---
+*Generated on {time.strftime('%Y-%m-%d %H:%M:%S')}*
+"""
