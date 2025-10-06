@@ -1,0 +1,52 @@
+05  :PFX:-LQ-REC                   PIC 9(08).           
+05  FILLER                         PIC X(01) VALUE ','. 
+05  :PFX:-TXT-REC                  PIC 9(08).           
+05  FILLER                         PIC X(01) VALUE ','. 
+05  :PFX:-TOTAL-EXIST-ERROR-REC    PIC 9(08).           
+05  FILLER                         PIC X(01) VALUE ','. 
+05  :PFX:-TOTAL-RECORDS            PIC 9(08).           
+05  FILLER                         PIC X(01) VALUE ','. 
+05  :PFX:-UNCHNGD-ADDR             PIC 9(08).           
+05  FILLER                         PIC X(01) VALUE ','. 
+05  :PFX:-TXT-LQ-AIN-UNCHG         PIC 9(08).           
+05  FILLER                         PIC X(01) VALUE ','. 
+05  :PFX:-LQ-HQ-AIN-UNCHG          PIC 9(08).           
+05  FILLER                         PIC X(01) VALUE ','. 
+05  :PFX:-UNCHG-LQ-AIN-CHGD        PIC 9(08).           
+05  FILLER                         PIC X(01) VALUE ','. 
+05  :PFX:-TXT-LQ-AIN-CHG           PIC 9(08).           
+05  FILLER                         PIC X(01) VALUE ','. 
+05  :PFX:-LQ-HQ-AIN-CHG            PIC 9(08).            
+05  FILLER                         PIC X(01) VALUE ','.  
+05  :PFX:-PIN-CT                   PIC 9(08).            
+05  FILLER                         PIC X(01) VALUE ','.  
+05  :PFX:-REAPPLY-DIN-CT           PIC 9(08).            
+05  FILLER                         PIC X(01) VALUE ','.  
+05  :PFX:-LIN-DELETED              PIC 9(08).            
+05  FILLER                         PIC X(01) VALUE ','.  
+05  :PFX:-CPU-TIME.                                      
+    10 :PFX:-EDBNAECA-CPU          PIC 9(17).            
+    10 FILLER                      PIC X(01) VALUE ','.  
+    10 :PFX:-EDBNAECA-ELP          PIC 9(08).            
+    10 FILLER                      PIC X(01) VALUE ','.  
+    10 :PFX:-EDBNAECB-CPU          PIC 9(17).            
+    10 FILLER                      PIC X(01) VALUE ','.  
+    10 :PFX:-EDBNAECB-ELP          PIC 9(08).            
+    10 FILLER                      PIC X(01) VALUE ','.  
+    10 :PFX:-EDBNAECC-CPU          PIC 9(17).            
+    10 FILLER                      PIC X(01) VALUE ','.  
+    10 :PFX:-EDBNAECC-ELP          PIC 9(08).           
+    10 FILLER                      PIC X(01) VALUE ','. 
+    10 :PFX:-EDBNAECD-CPU          PIC 9(17).           
+    10 FILLER                      PIC X(01) VALUE ','. 
+    10 :PFX:-EDBNAECD-ELP          PIC 9(08).           
+    10 FILLER                      PIC X(01) VALUE ','. 
+    10 :PFX:-EDBNAECE-CPU          PIC 9(17).           
+    10 FILLER                      PIC X(01) VALUE ','. 
+    10 :PFX:-EDBNAECE-ELP          PIC 9(08).           
+    10 FILLER                      PIC X(01) VALUE ','. 
+    10 :PFX:-TOTAL-TIME-CPU        PIC 9(17).           
+    10 FILLER                      PIC X(01) VALUE ','. 
+    10 :PFX:-TOTAL-TIME-ELP        PIC 9(08).           
+    10  FILLER                     PIC X(01) VALUE ','. 
+05  :PFX:-TXT-HQ-AIN-CHG           PIC 9(08).           

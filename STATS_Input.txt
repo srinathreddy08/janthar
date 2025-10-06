@@ -1,0 +1,60 @@
+ PFX-LQ-REC                                50                                   
+ FILLER                             ,                                           
+ PFX-TXT-REC                           401407                                   
+ FILLER                             ,                                           
+ PFX-TOTAL-EXIST-ERROR-REC                  2                                   
+ FILLER                             ,                                           
+ PFX-TOTAL-RECORDS                     401457                                   
+ FILLER                             ,                                           
+ PFX-UNCHNGD-ADDR                        5752                                   
+ FILLER                             ,                                           
+ PFX-TXT-LQ-AIN-UNCHG                       0                                   
+ FILLER                             ,                                           
+ PFX-LQ-HQ-AIN-UNCHG                        0                                   
+ FILLER                             ,                                           
+ PFX-UNCHG-LQ-AIN-CHGD                 275750                                   
+ FILLER                             ,                                           
+ PFX-TXT-LQ-AIN-CHG                    115339                                   
+ FILLER                             ,                                           
+ PFX-LQ-HQ-AIN-CHG                          5                                   
+ FILLER                             ,                                           
+ PFX-PIN-CT                            324444                                   
+ FILLER                             ,                                           
+ PFX-REAPPLY-DIN-CT                    400142                                   
+ FILLER                             ,                                           
+ PFX-LIN-DELETED                       324444                                   
+ FILLER                             ,                                           
+ PFX-EDBNAECA-CPU                              7696531                          
+ FILLER                             ,                                           
+ PFX-EDBNAECA-ELP                          22                                   
+ FILLER                             ,                                           
+ PFX-EDBNAECB-CPU                             25956723                          
+ FILLER                             ,                                           
+ PFX-EDBNAECB-ELP                          51                                   
+ FILLER                             ,                                           
+ PFX-EDBNAECC-CPU                            264827929                          
+ FILLER                             ,                                           
+ PFX-EDBNAECC-ELP                         380                                   
+ FILLER                             ,                                           
+ PFX-EDBNAECD-CPU                           1193534096                          
+ FILLER                             ,                                           
+ PFX-EDBNAECD-ELP                        2336                                   
+ FILLER                             ,                                           
+ PFX-EDBNAECE-CPU                               427735                          
+ FILLER                             ,                                           
+ PFX-EDBNAECE-ELP                           0                                   
+ FILLER                             ,                                           
+ PFX-TOTAL-TIME-CPU                         1493039071                          
+ FILLER                             ,                                           
+ PFX-TOTAL-TIME-ELP                      2792                                   
+ FILLER                             ,                                           
+ PFX-TXT-HQ-AIN-CHG                      4611                                   
+ ***  End of record  ***                                                        
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
